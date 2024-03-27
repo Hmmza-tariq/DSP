@@ -1,81 +1,82 @@
-% close all
-% [audio, fs] = audioread("LabMidAudio.mp3");
-% time = input("Enter delay time for echo: ");
-% alpha = input("Enter value of Alpha for echo:");
-% echoAud = echo(audio, time, alpha);
-% sound(audio, fs);
-% pause(length(audio)/fs + 1);
-% disp("Original Done")
-% sound(echoAud, fs);
-% % Plot the Audio and Echo
-% figure;
-% subplot(3,1,1);
-% plot(audio);
-% title('Original Audio');
-% subplot(3,1,2);
-% plot(echoAud);
-% title('Audio with Echo');
-% % Reverberation
-% timere = input("Enter delay time for reverberation: ");
-% alphare = input("Enter value of Alpha for reverberation: ");
-% reverbAud = reverb(audio, timere, alphare);
-% sound(reverbAud, fs);
-% subplot(3,1,3);
-% plot(reverbAud);
-% title('Audio Reverberation Effect');
-% %%
-% % Chorus
-% delaychor = input("Enter delay time for chorus: ");
-% delay_mod = round(0.005*fs);
-% voicesNum = input("Enter Number of voices: ");
-% chorAudio = chorus(audio, delaychor, voicesNum, delay_mod, fs);
-% disp("Playing Chorus voice")
-% sound(chorAudio, fs);
-% figure;
-% plot(chorAudio);
-% title('Audio with Chorus');
-% function echoAudio = echo(audio, delay, alpha)
-%  echoAudio = zeros(size(audio));
-%  for n = delay+1:length(audio)
-%  echoAudio(n) = audio(n) + alpha * audio(n-delay);
-%  end
-% end
-% function reverbAudio = reverb(audio, delay, alpha)
-%  reverbAudio = zeros(size(audio));
-%  for n = delay+1:length(audio)
-%  reverbAudio(n) = audio(n) + alpha * reverbAudio(n-delay);
-%  end
-% end
-% function chorAudio = chorus(audio, delay, voiceNum, delay_mod, fs)
-%  chorAudio = audio;
-%  mod_freq = 2;
-%  mod_period = fs / mod_freq; 
-% for voice = 1:voiceNum
-%  % Generate the modulated delay amount
-%  mod_delay = delay * ones(size(audio));
-%  for n = 1:length(audio)
-%  mod_index = mod(n, mod_period) + 1; 
-%  if mod_index <= mod_period/2
-%  mod_delay(n) = delay + delay_mod;
-%  else
-%  mod_delay(n) = delay - delay_mod;
-%  end
-%  end
+close all
+[audio, fs] = audioread("LabMidAudio.mp3");
+time = input("Enter delay time for echo: ");
+alpha = input("Enter value of Alpha for echo:");
+echoAud = echo(audio, time, alpha);
+sound(audio, fs);
+pause(length(audio)/fs + 1);
+disp("Original Done")
+sound(echoAud, fs);
+% Plot the Audio and Echo
+figure;
+subplot(3,1,1);
+plot(audio);
+title('Original Audio');
+subplot(3,1,2);
+plot(echoAud);
+title('Audio with Echo');
+% Reverberation
+timere = input("Enter delay time for reverberation: ");
+alphare = input("Enter value of Alpha for reverberation: ");
+reverbAud = reverb(audio, timere, alphare);
+sound(reverbAud, fs);
+subplot(3,1,3);
+plot(reverbAud);
+title('Audio Reverberation Effect');
+%%
+% Chorus
+delaychor = input("Enter delay time for chorus: ");
+delay_mod = round(0.005*fs);
+voicesNum = input("Enter Number of voices: ");
+chorAudio = chorus(audio, delaychor, voicesNum, delay_mod, fs);
+disp("Playing Chorus voice")
+sound(chorAudio, fs);
+figure;
+plot(chorAudio);
+title('Audio with Chorus');
+function echoAudio = echo(audio, delay, alpha)
+ echoAudio = zeros(size(audio));
+ for n = delay+1:length(audio)
+ echoAudio(n) = audio(n) + alpha * audio(n-delay);
+ end
+end
+function reverbAudio = reverb(audio, delay, alpha)
+ reverbAudio = zeros(size(audio));
+ for n = delay+1:length(audio)
+ reverbAudio(n) = audio(n) + alpha * reverbAudio(n-delay);
+ end
+end
+function chorAudio = chorus(audio, delay, voiceNum, delay_mod, fs)
+ chorAudio = audio;
+ mod_freq = 2;
+ mod_period = fs / mod_freq; 
+for voice = 1:voiceNum
+ % Generate the modulated delay amount
+ mod_delay = delay * ones(size(audio));
+ for n = 1:length(audio)
+ mod_index = mod(n, mod_period) + 1; 
+ if mod_index <= mod_period/2
+ mod_delay(n) = delay + delay_mod;
+ else
+ mod_delay(n) = delay - delay_mod;
+ end
+ end
  
-%  % Apply delay and modulation to the current voice
-%  audio_voice = zeros(size(audio));
-%  for n = max(mod_delay)+1:length(audio)
-%  delay_index = n - mod_delay(n);
-%  if delay_index > 0 && delay_index <= length(audio)
-%  audio_voice(n) = audio(delay_index);
-%  end
-%  end
+ % Apply delay and modulation to the current voice
+ audio_voice = zeros(size(audio));
+ for n = max(mod_delay)+1:length(audio)
+ delay_index = n - mod_delay(n);
+ if delay_index > 0 && delay_index <= length(audio)
+ audio_voice(n) = audio(delay_index);
+ end
+ end
  
-%  % Mix the current voice with the chorus signal
-%  chorAudio = chorAudio + audio_voice / voiceNum;
-% end
-% end
+ % Mix the current voice with the chorus signal
+ chorAudio = chorAudio + audio_voice / voiceNum;
+end
+end
 
+%----------------------------------------------------------------------------------------------------------------------------
 
 % close all 
 % %Read audio samples from the file "street-drum.mp3"
@@ -192,56 +193,57 @@
 % xlabel('Sample Index');
 % ylabel('Amplitude');
 
+%----------------------------------------------------------------------------------------------------------------------------
 
-clc
-clear all
-syms n2
+% clc
+% clear all
+% syms n2
 
-%a part
-n=[-6:16];
-n1=[zeros(1,7) 1:16];
-x1 = power(2,-n1)-power(-1/2,n1);
-subplot(2,1,1)
-stem(n,x1)
+% %a part
+% n=[-6:16];
+% n1=[zeros(1,7) 1:16];
+% x1 = power(2,-n1)-power(-1/2,n1);
+% subplot(2,1,1)
+% stem(n,x1)
 
-imp = [zeros(1,11) 1 zeros(1,4) 1 zeros(1,6)];
-x2 = 5*imp;
-subplot(2,1,2)
-stem(n,x2)
+% imp = [zeros(1,11) 1 zeros(1,4) 1 zeros(1,6)];
+% x2 = 5*imp;
+% subplot(2,1,2)
+% stem(n,x2)
  
-%b part
-% figure()
-% subplot(2,1,1)
-% stem(n,abs(x1))
-% subplot(2,1,2)
-% stem(n,abs(x2))
-% figure()
-% subplot(2,1,1)
-% stem(angle(x1))
-% subplot(2,1,2)
-% stem(angle(x2))
-%c part
-x1 = (2)^-n2-(-1/2)^n2;
-x1_z = ztrans(x1)
+% %b part
+% % figure()
+% % subplot(2,1,1)
+% % stem(n,abs(x1))
+% % subplot(2,1,2)
+% % stem(n,abs(x2))
+% % figure()
+% % subplot(2,1,1)
+% % stem(angle(x1))
+% % subplot(2,1,2)
+% % stem(angle(x2))
+% %c part
+% x1 = (2)^-n2-(-1/2)^n2;
+% x1_z = ztrans(x1)
 
-%d part
-x1_z
-%part e
-figure()
-num = [0 1 0];
-den = [1 0 -1/4];
-[z,p,k]= residue(num,den)
-zplane(z,p)
-%% 
-clc
-clear all
-t = 0:0.000125:1;
-f1 = 300;
-f2 = 1500;
-f3 = 3000;
-fs = 8000;
-x = 4*sin(2*pi*f1*t)+3*sin(2*pi*f2*t)+2*sin(2*pi*f3*t);
-plot(t,x)
-fftx = abs(fft(x));
-figure()
-plot(fftx)
+% %d part
+% x1_z
+% %part e
+% figure()
+% num = [0 1 0];
+% den = [1 0 -1/4];
+% [z,p,k]= residue(num,den)
+% zplane(z,p)
+% %% 
+% clc
+% clear all
+% t = 0:0.000125:1;
+% f1 = 300;
+% f2 = 1500;
+% f3 = 3000;
+% fs = 8000;
+% x = 4*sin(2*pi*f1*t)+3*sin(2*pi*f2*t)+2*sin(2*pi*f3*t);
+% plot(t,x)
+% fftx = abs(fft(x));
+% figure()
+% plot(fftx)
