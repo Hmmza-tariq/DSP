@@ -1,9 +1,4 @@
 % Task 1
-
-clc
-clear
-close all
-
 % --------------------------------------
 
 A = 5;
@@ -20,8 +15,8 @@ fourier_noise = awgn(dtft, 10, 'measured');
 idtft = abs(ifft(fourier_noise));
 
 % using the low pass filter
-f1 = low_pass_filter(Fs, noise);
-f2 = low_pass_filter(Fs, idtft);
+f1 = filter(Hd, noise);
+f2 = filter(Hd, idtft);
 
 %% plotting cosine signal x(t)
 subplot(4, 3, 1);% Task 1
