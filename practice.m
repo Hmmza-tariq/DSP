@@ -1,80 +1,80 @@
-close all
-[audio, fs] = audioread("LabMidAudio.mp3");
-time = input("Enter delay time for echo: ");
-alpha = input("Enter value of Alpha for echo:");
-echoAud = echo(audio, time, alpha);
-sound(audio, fs);
-pause(length(audio)/fs + 1);
-disp("Original Done")
-sound(echoAud, fs);
-% Plot the Audio and Echo
-figure;
-subplot(3,1,1);
-plot(audio);
-title('Original Audio');
-subplot(3,1,2);
-plot(echoAud);
-title('Audio with Echo');
-% Reverberation
-timere = input("Enter delay time for reverberation: ");
-alphare = input("Enter value of Alpha for reverberation: ");
-reverbAud = reverb(audio, timere, alphare);
-sound(reverbAud, fs);
-subplot(3,1,3);
-plot(reverbAud);
-title('Audio Reverberation Effect');
-%%
-% Chorus
-delaychor = input("Enter delay time for chorus: ");
-delay_mod = round(0.005*fs);
-voicesNum = input("Enter Number of voices: ");
-chorAudio = chorus(audio, delaychor, voicesNum, delay_mod, fs);
-disp("Playing Chorus voice")
-sound(chorAudio, fs);
-figure;
-plot(chorAudio);
-title('Audio with Chorus');
-function echoAudio = echo(audio, delay, alpha)
- echoAudio = zeros(size(audio));
- for n = delay+1:length(audio)
- echoAudio(n) = audio(n) + alpha * audio(n-delay);
- end
-end
-function reverbAudio = reverb(audio, delay, alpha)
- reverbAudio = zeros(size(audio));
- for n = delay+1:length(audio)
- reverbAudio(n) = audio(n) + alpha * reverbAudio(n-delay);
- end
-end
-function chorAudio = chorus(audio, delay, voiceNum, delay_mod, fs)
- chorAudio = audio;
- mod_freq = 2;
- mod_period = fs / mod_freq; 
-for voice = 1:voiceNum
- % Generate the modulated delay amount
- mod_delay = delay * ones(size(audio));
- for n = 1:length(audio)
- mod_index = mod(n, mod_period) + 1; 
- if mod_index <= mod_period/2
- mod_delay(n) = delay + delay_mod;
- else
- mod_delay(n) = delay - delay_mod;
- end
- end
+% close all
+% [audio, fs] = audioread("LabMidAudio.mp3");
+% time = input("Enter delay time for echo: ");
+% alpha = input("Enter value of Alpha for echo:");
+% echoAud = echo(audio, time, alpha);
+% sound(audio, fs);
+% pause(length(audio)/fs + 1);
+% disp("Original Done")
+% sound(echoAud, fs);
+% % Plot the Audio and Echo
+% figure;
+% subplot(3,1,1);
+% plot(audio);
+% title('Original Audio');
+% subplot(3,1,2);
+% plot(echoAud);
+% title('Audio with Echo');
+% % Reverberation
+% timere = input("Enter delay time for reverberation: ");
+% alphare = input("Enter value of Alpha for reverberation: ");
+% reverbAud = reverb(audio, timere, alphare);
+% sound(reverbAud, fs);
+% subplot(3,1,3);
+% plot(reverbAud);
+% title('Audio Reverberation Effect');
+% %%
+% % Chorus
+% delaychor = input("Enter delay time for chorus: ");
+% delay_mod = round(0.005*fs);
+% voicesNum = input("Enter Number of voices: ");
+% chorAudio = chorus(audio, delaychor, voicesNum, delay_mod, fs);
+% disp("Playing Chorus voice")
+% sound(chorAudio, fs);
+% figure;
+% plot(chorAudio);
+% title('Audio with Chorus');
+% function echoAudio = echo(audio, delay, alpha)
+%  echoAudio = zeros(size(audio));
+%  for n = delay+1:length(audio)
+%  echoAudio(n) = audio(n) + alpha * audio(n-delay);
+%  end
+% end
+% function reverbAudio = reverb(audio, delay, alpha)
+%  reverbAudio = zeros(size(audio));
+%  for n = delay+1:length(audio)
+%  reverbAudio(n) = audio(n) + alpha * reverbAudio(n-delay);
+%  end
+% end
+% function chorAudio = chorus(audio, delay, voiceNum, delay_mod, fs)
+%  chorAudio = audio;
+%  mod_freq = 2;
+%  mod_period = fs / mod_freq; 
+% for voice = 1:voiceNum
+%  % Generate the modulated delay amount
+%  mod_delay = delay * ones(size(audio));
+%  for n = 1:length(audio)
+%  mod_index = mod(n, mod_period) + 1; 
+%  if mod_index <= mod_period/2
+%  mod_delay(n) = delay + delay_mod;
+%  else
+%  mod_delay(n) = delay - delay_mod;
+%  end
+%  end
  
- % Apply delay and modulation to the current voice
- audio_voice = zeros(size(audio));
- for n = max(mod_delay)+1:length(audio)
- delay_index = n - mod_delay(n);
- if delay_index > 0 && delay_index <= length(audio)
- audio_voice(n) = audio(delay_index);
- end
- end
+%  % Apply delay and modulation to the current voice
+%  audio_voice = zeros(size(audio));
+%  for n = max(mod_delay)+1:length(audio)
+%  delay_index = n - mod_delay(n);
+%  if delay_index > 0 && delay_index <= length(audio)
+%  audio_voice(n) = audio(delay_index);
+%  end
+%  end
  
- % Mix the current voice with the chorus signal
- chorAudio = chorAudio + audio_voice / voiceNum;
-end
-end
+%  % Mix the current voice with the chorus signal
+%  chorAudio = chorAudio + audio_voice / voiceNum;
+% end
+% end
 
 %----------------------------------------------------------------------------------------------------------------------------
 
@@ -247,3 +247,95 @@ end
 % fftx = abs(fft(x));
 % figure()
 % plot(fftx)
+
+
+% Step 1: Load Audio
+filename = 'Assets/audio.mp3';
+[y, Fs] = audioread(filename);
+
+% Step 2: Lowpass Filtering
+cutoff_freq = 4000;
+filter_order = 8;
+[b, a] = butter(filter_order, cutoff_freq/(Fs/2), 'low');
+filtered_signal = filter(b, a, y);
+
+% Step 3: Decimation
+M = 4;
+decimated_signal = downsample(filtered_signal, M);
+
+% Step 4: Interpolation
+L = 3; % Interpolation factor
+interpolated_signal = interp(decimated_signal, L);
+
+% Step 5: Upsampling
+upsampled_signal = upsample(interpolated_signal, M);
+
+% Time-domain plots
+figure;
+subplot(3, 2, 1);
+plot(y);
+title('Original Audio');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+subplot(3, 2, 2);
+plot(filtered_signal);
+title('Filtered Signal');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+subplot(3, 2, 3);
+plot(decimated_signal);
+title('Decimated Signal (M=4)');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+subplot(3, 2, 4);
+plot(interpolated_signal);
+title('Interpolated Signal (L=3)');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+subplot(3, 2, 5);
+plot(upsampled_signal);
+title('Upsampled Signal');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+
+figure;
+subplot(3, 2, 1);
+f = linspace(-Fs/2, Fs/2, length(y));
+Y = fftshift(fft(y));
+plot(f, abs(Y));
+title('Original Audio');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+
+subplot(3, 2, 2);
+Filtered_Y = fftshift(fft(filtered_signal));
+plot(f, abs(Filtered_Y));
+title('Frequency Domain - Filtered Signal');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+
+subplot(3, 2, 3);
+Decimated_Y = fftshift(fft(decimated_signal));
+plot(linspace(-Fs/2, Fs/2, length(Decimated_Y)), abs(Decimated_Y));
+title('Frequency Domain - Decimated Signal');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+
+subplot(3, 2, 4);
+Interpolated_Y = fftshift(fft(interpolated_signal));
+plot(linspace(-Fs/2, Fs/2, length(Interpolated_Y)), abs(Interpolated_Y));
+title('Frequency Domain - Interpolated Signal');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+
+subplot(3, 2, 5);
+Upsampled_Y = fftshift(fft(upsampled_signal));
+plot(linspace(-Fs/2, Fs/2, length(Upsampled_Y)), abs(Upsampled_Y));
+title('Frequency Domain - Upsampled Signal');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
