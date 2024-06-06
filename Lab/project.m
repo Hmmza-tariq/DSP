@@ -5,7 +5,8 @@ classdef project < matlab.apps.AppBase
         MagnitudePhaseButton     matlab.ui.control.Button
         PoleZeroPlotButton       matlab.ui.control.Button
         SelectFilterTypeButton   matlab.ui.control.Button 
-        DisplayAxes              matlab.ui.control.UIAxes
+        DisplayTimeAxes          matlab.ui.control.UIAxes
+        DisplayFreqAxes          matlab.ui.control.UIAxes
         FilterOrderLabel         matlab.ui.control.Label
         BrandingLabel            matlab.ui.control.Label
         CoefficientsButton       matlab.ui.control.Button
@@ -56,16 +57,32 @@ classdef project < matlab.apps.AppBase
         app.a_coff = a;
         app.b_coff = b;
         filteredECG = filter(b, a, app.ecgSignal);
-    
-        % Plotting
-        plot(app.DisplayAxes, (0:length(app.ecgSignal)-1)/app.samplingRate, app.ecgSignal, 'b');
-        hold(app.DisplayAxes, 'on');
-        plot(app.DisplayAxes, (0:length(filteredECG)-1)/app.samplingRate, filteredECG, 'r');
-        hold(app.DisplayAxes, 'off');
-        legend(app.DisplayAxes, 'Original', app.selectedFilter);
-        title(app.DisplayAxes, ['ECG Signal - ' app.selectedFilter ' Filter']);
-        xlabel(app.DisplayAxes, 'Time (s)');
-        ylabel(app.DisplayAxes, 'Amplitude');
+
+        % Plotting in the Time Domain
+        plot(app.DisplayTimeAxes, (0:length(app.ecgSignal)-1)/app.samplingRate, app.ecgSignal, 'b');
+        hold(app.DisplayTimeAxes, 'on');
+        plot(app.DisplayTimeAxes, (0:length(filteredECG)-1)/app.samplingRate, filteredECG, 'r');
+        hold(app.DisplayTimeAxes, 'off');
+        legend(app.DisplayTimeAxes, 'Original', 'Filtered');
+        title(app.DisplayTimeAxes, ['ECG Signal - ' app.selectedFilter ' Filter in Time Domain']);
+        xlabel(app.DisplayTimeAxes, 'Time (s)');
+        ylabel(app.DisplayTimeAxes, 'Amplitude');
+
+        % Calculate the Fourier Transform for frequency domain representation
+        FFT_original = fft(app.ecgSignal);
+        FFT_filtered = fft(filteredECG);
+        frequencies = linspace(0, app.samplingRate/2, floor(length(app.ecgSignal)/2)+1);
+
+        % Plotting in the Frequency Domain
+        plot(app.DisplayFreqAxes, frequencies, abs(FFT_original(1:length(frequencies))), 'b');
+        hold(app.DisplayFreqAxes, 'on');
+        plot(app.DisplayFreqAxes, frequencies, abs(FFT_filtered(1:length(frequencies))), 'r');
+        hold(app.DisplayFreqAxes, 'off');
+        legend(app.DisplayFreqAxes, 'Original', 'Filtered');
+        title(app.DisplayFreqAxes, ['ECG Signal - ' app.selectedFilter ' Filter in Frequency Domain']);
+        xlabel(app.DisplayFreqAxes, 'Frequency (Hz)');
+        ylabel(app.DisplayFreqAxes, 'Magnitude');
+
     end
 
 
@@ -102,26 +119,8 @@ classdef project < matlab.apps.AppBase
         end
 
         function onPoleZeroPlotButtonPushed(app, ~)
-            % Use app.selectedFilter to get the selected filter type
-            app.selectedFilter = app.selectedFilter;
-
-            if strcmp(app.selectedFilter, 'Elliptic')
-                % Filter design parameters
-                passband = [6 40] / (app.samplingRate / 2);
-                stopband = [1 45] / (app.samplingRate / 2);
-                passbandRipple = 1;
-                stopbandAttenuation = 40;
-
-                % Design elliptic filter
-                [~, Wp_ellip] = ellipord(passband, stopband, passbandRipple, stopbandAttenuation);
-                [b, a] = ellip(app.currentFilterOrder, passbandRipple, stopbandAttenuation, Wp_ellip, 'bandpass');
-
-                % Plot the pole-zero plot
-                zplane(b, a);
-                title('Pole-Zero Plot - Elliptic Filter');
-            else
-                uialert(app.MainUIFigure, 'Pole-zero plot is only available for the Elliptic filter.', 'Filter Selection Error');
-            end
+                zplane(app.b_coff, app.a_coff);
+                title(['Pole-Zero Plot - ' app.selectedFilter ' Filter']);
         end
         
         function onSelectFilterTypeButtonPushed(app, ~)
@@ -132,11 +131,7 @@ classdef project < matlab.apps.AppBase
 
             if ~isempty(app.selectedFilter)
                 app.selectedFilter = app.selectedFilter;
-                if(app.selectedFilter == "Elliptic")
-                    app.PoleZeroPlotButton.Visible = "on";
-                else
-                    app.PoleZeroPlotButton.Visible = "off";
-                end
+               
                 onFilteredOutputButtonPushed(app);
             end
         end
@@ -162,7 +157,7 @@ methods (Access = private)
 
         % Create MainUIFigure and hide until all components are created
         app.MainUIFigure = uifigure('Visible', 'off', 'Color', [0.8 0.9 1]);
-        app.MainUIFigure.Position = [500 500 800 600];
+        app.MainUIFigure.Position = [100 100 800 600];
         app.MainUIFigure.Name = 'ECG Signal Filter App';
 
         % Create MagnitudePhaseButton
@@ -176,7 +171,7 @@ methods (Access = private)
         app.PoleZeroPlotButton.ButtonPushedFcn = createCallbackFcn(app, @onPoleZeroPlotButtonPushed, true);
         app.PoleZeroPlotButton.Position = [350 550 160 22];
         app.PoleZeroPlotButton.Text = 'Display Pole-Zero Plot';
-        app.PoleZeroPlotButton.Visible = "off";
+        app.PoleZeroPlotButton.Visible = "on";
 
         % Create SelectFilterTypeButton
         app.SelectFilterTypeButton = uibutton(app.MainUIFigure, 'push'); 
@@ -184,10 +179,15 @@ methods (Access = private)
         app.SelectFilterTypeButton.Position =  [550 550 160 22];
         app.SelectFilterTypeButton.Text = 'Select Filter Type'; 
 
-        % Create DisplayAxes
-        app.DisplayAxes = uiaxes(app.MainUIFigure);
-        app.DisplayAxes.Position = [50 50 700 400];
-        app.DisplayAxes.BackgroundColor = [1 1 1];
+        % Create DisplayTimeAxes
+        app.DisplayTimeAxes = uiaxes(app.MainUIFigure);
+        app.DisplayTimeAxes.Position = [50 50 350 400];
+        app.DisplayTimeAxes.BackgroundColor = [1 1 1];
+
+        % Create DisplayFreqAxes
+        app.DisplayFreqAxes = uiaxes(app.MainUIFigure);
+        app.DisplayFreqAxes.Position = [400 50 350 400];
+        app.DisplayFreqAxes.BackgroundColor = [1 1 1];
 
         % Create FilterOrderLabel
         app.FilterOrderLabel = uilabel(app.MainUIFigure);
@@ -213,8 +213,9 @@ methods (Access = private)
 
         app.BrandingLabel = uilabel(app.MainUIFigure);
         app.BrandingLabel.Position = [600 10 200 22];
-        app.BrandingLabel.Text = 'Powered by: Hexagone';
+        app.BrandingLabel.Text = 'Powered by: Hexagone and sponsored by Hamza, Maaz, Zaid, PC';
         app.BrandingLabel.HorizontalAlignment = 'center';
+
         % Show the figure after all components are created
         updateFilterOrder(app,app.currentFilterOrder);
         app.MainUIFigure.Visible = 'on';
